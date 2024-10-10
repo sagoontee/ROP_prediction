@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8">
+    <title>ROP Prognostic Prediction</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #fff;
+        }
+        .container {
+            max-width:420px;
+            margin: 0 auto;
+            background-color: #fff;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0px 0px 10px 0px rgba(0,0,0,0.1);
+        }
+        h2 {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #1e6e93;
+            font-family: Lato, sans-serif;
+            font-size: 60px;
+            font-weight: 300;
+        }
+        .input-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #555;
+            font-weight: bold;
+        }
+        input[type="number"], input[type="text"] {
+            width: 100%;
+            padding: 8px;
+            box-sizing: border-box;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+            margin-top: 5px;
+        }
+        .radio-container {
+            display: flex;
+            justify-content: left;
+            margin-top: 5px;
+        }
+        .radio-container label {
+        display: inline-block;
+        margin-right: 20px; /* ปรับระยะห่างระหว่างปุ่มเลือก */
+        margin-top: 5px;
+        }
+        .input-ga label {
+        display: inline-block;
+        margin-right: 20px; /* ปรับระยะห่างระหว่างปุ่มเลือก */
+        margin-top: 5px;
+        margin-bottom: 20px;
+        
+        }
+        .date_consult label {
+        display: inline-block;
+        margin-right: 20px; /* ปรับระยะห่างระหว่างปุ่มเลือก */
+        margin-top: 5px;
+        margin-bottom: 20px;
+        
+        }
+        .waitday label {
+        display: inline-block;
+        margin-right: 20px; /* ปรับระยะห่างระหว่างปุ่มเลือก */
+        margin-top: 5px;
+        margin-bottom: 20px;
+        }
+        .prob {
+            margin-top: 20px;
+            background-color: #1e6e93;
+            padding: 10px;
+            border-radius: 2px;
+            color: #fff;
+        }
+    </style>
+</head>
+<body>
+    <h2>ROP Prediction</h2>
+    <div class="container">
+        <div class="input-group">
+            <label for="sex">Sex:</label>
+                <div class="radio-container">
+                    <label><input type="radio" id="male" name="sex" value="0" checked> Male</label>
+                    <label><input type="radio" id="female" name="sex" value="1">  Female</label>
+                </div>
+            </div>
+        <div class="input-group">
+            <label for="ga_week">GA (weeks):</label>
+            <input type="number" id="ga_week" placeholder="Enter GA weeks">
+        </div>
+        <div class="input-group">
+            <label for="ga_day">GA (days):</label>
+            <input type="number" id="ga_day" placeholder="Enter GA days">
+        </div>
+        <div class="input-group">
+            <label for="bbw">Birth body weight (grams):</label>
+            <input type="number" id="bbw" placeholder="Enter Birth body weights">
+        </div>
+        <div class="input-group">
+            <label for="apgar5min">APGAR Score at 5 minutes:</label>
+            <input type="number" id="apgar5min" placeholder="Enter APGAR Score at 5 minutes">
+        </div>
+        <div class="input-group">
+        <label for="surfactant">Surfactant treatment:</label>
+            <div class="radio-container">
+                <label><input type="radio" id="surfact_no" name="surfactant" value="0" checked> No</label>
+                <label><input type="radio" id="surfact_yes" name="surfactant" value="1"> Yes</label>
+            </div>
+        </div>
+        <div class="input-group">
+        <label for="sepsis">Sepsis:</label>
+            <div class="radio-container">
+                <label><input type="radio" id="sepsis_no" name="sepsis" value="0" checked> No</label>
+                <label><input type="radio" id="sepsis_yes" name="sepsis" value="1"> Yes</label>
+            </div>
+        </div>
+        <div class="input-group">
+            <label for="pneumonia">Pneumonia:</label>
+                <div class="radio-container">
+                    <label><input type="radio" id="pneumonia_no" name="pneumonia" value="0" checked> No</label>
+                    <label><input type="radio" id="pneumonia_yes" name="pneumonia" value="1"> Yes</label>
+                </div>
+        </div>
+        <div class="input-group">
+            <label for="rds">Respiratory distress syndrome:</label>
+                <div class="radio-container">
+                    <label><input type="radio" id="rds_no" name="rds" value="0" checked> No</label>
+                    <label><input type="radio" id="rds_yes" name="rds" value="1"> Yes</label>
+                </div>
+        </div>
+        <div class="input-group">
+            <label>Bronchopulmonary dysplasia:</label>
+                <div class="radio-container">
+                    <label><input type="radio" id="bpd_no" name="bpd" value="0" checked> No</label>
+                    <label><input type="radio" id="bpd_yes" name="bpd" value="1"> Yes</label>
+                </div>
+        </div>
+        <div class="input-group">
+            <label>Patent ductus arteriosus:</label>
+                <div class="radio-container">
+                    <label><input type="radio" id="pda_no" name="pda" value="0" checked> No</label>
+                    <label><input type="radio" id="pda_yes" name="pda" value="1"> Yes</label>
+                </div>
+        </div>
+       
+        <div class="prob" id="prob"></div>     
+    </div>
+
+    <script>
+    function calculateProb() {
+    var ga_week = parseFloat(document.getElementById('ga_week').value);
+    var ga_day = parseFloat(document.getElementById('ga_day').value);
+    var bbw = parseFloat(document.getElementById('bbw').value);
+    var apgar5min = parseFloat(document.getElementById('apgar5min').value);
+    var sex = parseFloat(document.querySelector('input[name="sex"]:checked').value);
+    var surfactant = parseFloat(document.querySelector('input[name="surfactant"]:checked').value);
+    var sepsis = parseFloat(document.querySelector('input[name="sepsis"]:checked').value);
+    var pneumonia = parseFloat(document.querySelector('input[name="pneumonia"]:checked').value);
+    var rds = parseFloat(document.querySelector('input[name="rds"]:checked').value);
+    var bpd = parseFloat(document.querySelector('input[name="bpd"]:checked').value);
+    var pda = parseFloat(document.querySelector('input[name="pda"]:checked').value);
+    let ga;
+    
+    // coef logit
+    const l_ga =  -.2304161,
+          l_bbw =  -.0019767,
+          l_apgar5min = -.0594355,
+          l_surfactant = -1.248868,
+          l_sepsis =  1.487979,
+          l_pneumonia = .957471,
+          l_rds = .879068,
+          l_pda = .0039114,
+          l_bpd = 1.787073,
+          l_sex = 1.644805,
+          l_cons = 5.921829;
+
+
+    let log_odds,prob,odds,prob_show; 
+    //individaul odds
+        if(isNaN(ga_day)){
+            ga_day = 0;
+            ga = ga_week+ga_day/7;
+        }
+         ga = ga_week+ga_day/7;
+        log_odds = (ga*l_ga+bbw*l_bbw+apgar5min*l_apgar5min+surfactant*l_surfactant+sepsis*l_sepsis+
+        sex*l_sex+pneumonia*l_pneumonia+rds*l_rds+bpd*l_bpd+pda*l_pda+l_cons);
+        prob = (1/(1+Math.exp(-log_odds)));
+        prob_show = prob*100;
+    
+    //Result  
+    document.getElementById('prob').innerText = `Probability ROP is: ${prob_show.toFixed(2)}%`;
+    }
+
+    //Event Listener
+    document.querySelectorAll('input[name="sex"]').forEach(function(el) {
+        el.addEventListener('change', calculateProb);
+    });
+    document.getElementById("ga_week").addEventListener("input", calculateProb);
+    document.getElementById("ga_day").addEventListener("input", calculateProb);
+    document.getElementById('bbw').addEventListener('input', calculateProb);
+    document.getElementById('apgar5min').addEventListener('input', calculateProb);
+    document.querySelectorAll('input[name="surfactant"]').forEach(function(el) {
+        el.addEventListener('change', calculateProb);
+    });
+    document.querySelectorAll('input[name="sepsis"]').forEach(function(el) {
+        el.addEventListener('change', calculateProb);
+    });
+    document.querySelectorAll('input[name="pneumonia"]').forEach(function(el) {
+        el.addEventListener('change', calculateProb);
+    });
+    document.querySelectorAll('input[name="rds"]').forEach(function(el) {
+        el.addEventListener('change', calculateProb);
+    });
+    document.querySelectorAll('input[name="pda"]').forEach(function(el) {
+        el.addEventListener('change', calculateProb);
+    });
+    document.querySelectorAll('input[name="bpd"]').forEach(function(el) {
+        el.addEventListener('change', calculateProb);
+    });
+    </script>
+</body>
+</html>
+
